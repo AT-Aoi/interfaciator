@@ -10,9 +10,11 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Flashtastic")]
 [assembly: AssemblyProduct("Interfaciator")]
-[assembly: AssemblyCopyright("Copyright © Flashtastic 2011")]
+[assembly: AssemblyCopyright("Copyright © Flashtastic 2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
+
+[assembly: ComVisible(false)]
 
 // Versionsinformationen für eine Assembly bestehen aus den folgenden vier Werten:
 //
@@ -26,4 +28,3 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("0.1.1.0")]
 [assembly: AssemblyFileVersion("0.1.1.0")]
-[assembly: ComVisibleAttribute(false)]

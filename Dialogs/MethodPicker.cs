@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using System.Collections;
 using System.Data;
 using System.Drawing;
-using System.Text;
-using System.Windows.Forms;
-using ASCompletion.Model;
-using System.Collections;
 using System.IO;
+using ASCompletion.Model;
+using System.Windows.Forms;
+using PluginCore;
+using PluginCore.Localization;
 
 namespace Interfaciator.Dialogs
 {
@@ -108,13 +107,33 @@ namespace Interfaciator.Dialogs
             InitializeComponent();
         }
 
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (DialogResult != DialogResult.Cancel)
+            {
+                String path = this.selectedPath;
+                String file = Path.ChangeExtension(this.SelectedFile, ".as");
+                String filePath = Path.Combine(path, file);
+
+                if (File.Exists(filePath)) ///File already exists...
+                {
+                    string title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
+                    string message = TextHelper.GetString("ProjectManager.Info.FolderAlreadyContainsFile");
+                    DialogResult result = MessageBox.Show(PluginBase.MainForm, string.Format(message, file, "\n"), title, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (result == DialogResult.No)
+                    {
+                        e.Cancel = true;
+                    }
+                }
+            }
+        }
+
         protected void selectPackage(String fullPackage)
         {
             String path;
             for (int i = 0; i < srcPaths.Length; i++)
             {
                 path = srcPaths[i];
-                //MessageBox.Show("Comparing " + path + " to " + fullPackage);
                 if (fullPackage.Contains(path))
                 {
                     showPackage(fullPackage, path);
