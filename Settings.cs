@@ -7,7 +7,7 @@ namespace Interfaciator
     [Serializable]
     public class Settings
     {
-        const Boolean AUTOSELECT_METHODS = true;
+        const Boolean AUTOSELECT_METHODS = false;
         protected Boolean autoSelectMethods = AUTOSELECT_METHODS;
 
         [DisplayName("Method auto-selection")]
@@ -18,27 +18,38 @@ namespace Interfaciator
             set { autoSelectMethods = value; }
         }
 
-        const Boolean SHOW_FULLPATH = false;
-        protected Boolean showFullPath = SHOW_FULLPATH;
+        const Boolean DISPLAY_FULLPATH = false;
+        protected Boolean displayFullPath = DISPLAY_FULLPATH;
 
-        [DisplayName("Show full path")]
-        [LocalizedCategory("ASCompletion.Category.Common"), Description("Determines if the full path is displayed in path-picker"), DefaultValue(SHOW_FULLPATH)]
-        public Boolean ShowFullPath
+        [DisplayName("Display full path")]
+        [LocalizedCategory("ASCompletion.Category.Common"), Description("Determines if the full path is displayed in path-picker"), DefaultValue(DISPLAY_FULLPATH)]
+        public Boolean DisplayFullPath
         {
-            get { return showFullPath; }
-            set { showFullPath = value; }
+            get { return displayFullPath; }
+            set { displayFullPath = value; }
         }
 
-        /*const Boolean INCLUDE_INTERFACES = true;
-        protected Boolean includeInterfaces = INCLUDE_INTERFACES;
+        const Boolean DISPLAY_ICONS = true;
+        protected Boolean displayIcons = DISPLAY_ICONS;
 
-        [DisplayName("Include Interfaces")]
-        [LocalizedCategory("ASCompletion.Category.Common"), Description("Determines if option should be allowed in interfaces"), DefaultValue(INCLUDE_INTERFACES)]
-        public Boolean IncludeInterfaces
+        [DisplayName("Display icons")]
+        [LocalizedCategory("ASCompletion.Category.Common"), Description("Defines if type-icons are displayed in pick-dialog"), DefaultValue(DISPLAY_ICONS)]
+        public Boolean DisplayIcons
         {
-            get { return includeInterfaces; }
-            set { includeInterfaces = value; }
-        }///*/
+            get { return displayIcons; }
+            set { displayIcons = value; }
+        }
+
+        const Boolean DISPLAY_MODIFIERS = true;
+        protected Boolean displayModifiers = DISPLAY_MODIFIERS;
+
+        [DisplayName("Display modifiers")]
+        [LocalizedCategory("ASCompletion.Category.Common"), Description("Defines if modifiers (get/set, static) are displayed in pick-dialog"), DefaultValue(DISPLAY_MODIFIERS)]
+        public Boolean DisplayModifiers
+        {
+            get { return displayModifiers; }
+            set { displayModifiers = value; }
+        }
 
         const String NAME_PREFIX = "I";
         protected String namePrefix = NAME_PREFIX;
@@ -50,17 +61,5 @@ namespace Interfaciator
             get { return namePrefix; }
             set { namePrefix = value; }
         }
-
-        /*
-        protected string[] filteredDirectoryNames = new string[] { "src", "source", "sources", "as", "as2", "as3", "actionscript", "flash", "classes", "trunk", "svn" };
-
-        [DisplayName("Filtered Directory Names")]
-        [LocalizedDescription("ProjectManager.Description.FilteredDirectoryNames")]
-        [LocalizedCategory("ProjectManager.Category.Exclusions")]
-        public string[] FilteredDirectoryNames
-        {
-            get { return filteredDirectoryNames; }
-            set { filteredDirectoryNames = value; }
-        }///*/
     }
 }

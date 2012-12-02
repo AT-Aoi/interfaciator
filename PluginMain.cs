@@ -177,7 +177,12 @@ namespace Interfaciator
                 }
 
                 ///MethodPicker dialog = new MethodPicker(this.settingObject.AutoSelectMethods, this.settingObject.ShowFullPath, this.settingObject.FilteredDirectoryNames, this.settingObject.NamePrefix);
-                MethodPicker dialog = new MethodPicker(this.settingObject.AutoSelectMethods, this.settingObject.ShowFullPath, this.settingObject.NamePrefix);
+                MethodPicker dialog = new MethodPicker();
+                dialog.AutoSelect = settingObject.AutoSelectMethods;
+                dialog.FullPath = settingObject.DisplayFullPath;
+                dialog.Prefix = settingObject.NamePrefix;
+                dialog.DisplayIcons = settingObject.DisplayIcons;
+                dialog.DisplayModifiers = settingObject.DisplayModifiers;
                 dialog.SourcePaths = getSourcePaths();
                 dialog.SelectedFile = clickedPath;
                 dialog.MethodList = functions.ToArray();

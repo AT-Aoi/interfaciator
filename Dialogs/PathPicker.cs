@@ -111,7 +111,7 @@ namespace Interfaciator.Dialogs
         protected TreeNode createNode(String src, Boolean root)
         {
             DirectoryInfo di = new DirectoryInfo(src);
-            String display = !root ? di.FullName : di.Name;
+            String display = (this.fullPath && !root)? di.FullName : di.Name;
             ///TODO: Get filtered names from ProjectManager
             ///TreeNode tn = new FolderNode(display,fullPath,filtered);
             TreeNode tn = new TreeNode(display);
