@@ -7,6 +7,9 @@ using ASCompletion.Model;
 using System.Windows.Forms;
 using PluginCore;
 using PluginCore.Localization;
+using System.Reflection;
+using Interfaciator.Controls;
+using System.Collections.Generic;
 
 namespace Interfaciator.Dialogs
 {
@@ -15,6 +18,8 @@ namespace Interfaciator.Dialogs
         protected MemberModel[] members;
         protected Boolean autoSelect;
         protected Boolean fullPath;
+        protected Boolean showIcons;
+        protected Boolean showModifiers;
         
         protected String selectedPath;
         protected String selectedName;
@@ -30,12 +35,43 @@ namespace Interfaciator.Dialogs
             {
                 members = value;
                 MemberModel mm;
-                int added;
+                int icon;
+                FlagType ft;
+                List<string> modifiers;
                 for (int i = 0; i < members.Length; i++)
                 {
                     mm = (MemberModel)members[i];
-                    added = methodList.Items.Add(mm.ToDeclarationString());
-                    methodList.SetItemChecked(added, autoSelect);
+                    modifiers = new List<string>();
+                    ft = mm.Flags;
+
+                    if (showIcons)
+                    {
+                        icon = (((ft & FlagType.Getter) | (ft & FlagType.Setter)) > 0) ? 1 : 0;
+                    }
+                    else
+                    {
+                        icon = -1;
+                    }
+                    if (showModifiers)
+                    {
+                        if ((ft & FlagType.Static) > 0)
+                        {
+                            modifiers.Add("static");
+                        }
+                        if ((ft & FlagType.Getter) > 0)
+                        {
+                            modifiers.Add("get");
+                        }
+                        else if ((ft & FlagType.Setter) > 0)
+                        {
+                            modifiers.Add("set");
+                        }
+                    }
+                    methodList.Items.Add(new GListBox.GListBoxItem(mm.ToDeclarationString(), modifiers.ToArray(), icon));
+                }
+                if (autoSelect)
+                {
+                    methodList.SelectAll();
                 }
             }
         }
@@ -52,11 +88,9 @@ namespace Interfaciator.Dialogs
                 index = selectedName.LastIndexOf(".");
                 selectedName = (index != -1) ? selectedName.Substring(0, index) : selectedName;
 
-                //MessageBox.Show("extracted following path: '" + selectedPath + "' and name: '" + selectedName + "'");
-
                 txtName.Text = namePrefix + selectedName;
                 if (srcPaths != null)
-                    selectPackage(selectedPath);
+                    SelectPackage(selectedPath);
             }
         }
 
@@ -92,9 +126,41 @@ namespace Interfaciator.Dialogs
                     srcPaths[i] = path;
                 }
                 if (selectedName != null)
-                    selectPackage(selectedPath);
+                    SelectPackage(selectedPath);
             }
         }
+
+        public Boolean AutoSelect
+        {
+            get { return autoSelect; }
+            set { autoSelect = value; }
+        }
+
+        public Boolean FullPath
+        {
+            get { return fullPath; }
+            set { fullPath = value; }
+        }
+
+        public string Prefix
+        {
+            get { return namePrefix; }
+            set { namePrefix = value; }
+        }
+
+        public Boolean DisplayIcons
+        {
+            get { return showIcons; }
+            set { showIcons = value; }
+        }
+
+        public Boolean DisplayModifiers
+        {
+            get { return showModifiers; }
+            set { showModifiers = value; }
+        }
+
+        public MethodPicker() : this(false, false, "") { }
 
         public MethodPicker(Boolean autoSelect, Boolean fullPath, String prefix) : this(autoSelect, fullPath, new String[0], prefix) { }
 
@@ -104,31 +170,23 @@ namespace Interfaciator.Dialogs
             this.fullPath = fullPath;
             this.autoSelect = autoSelect;
             this.filtered = filtered;
+
             InitializeComponent();
+            InitializeImages();
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
+        private void InitializeImages()
         {
-            if (DialogResult != DialogResult.Cancel)
-            {
-                String path = this.selectedPath;
-                String file = Path.ChangeExtension(this.SelectedFile, ".as");
-                String filePath = Path.Combine(path, file);
+            ImageList icons = new ImageList();
+            Assembly self = Assembly.GetExecutingAssembly();
 
-                if (File.Exists(filePath)) ///File already exists...
-                {
-                    string title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
-                    string message = TextHelper.GetString("ProjectManager.Info.FolderAlreadyContainsFile");
-                    DialogResult result = MessageBox.Show(PluginBase.MainForm, string.Format(message, file, "\n"), title, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                    if (result == DialogResult.No)
-                    {
-                        e.Cancel = true;
-                    }
-                }
-            }
+            icons.Images.Add(Properties.Resources.method);
+            icons.Images.Add(Properties.Resources.property);
+            
+            this.methodList.ImageList = icons;
         }
 
-        protected void selectPackage(String fullPackage)
+        protected void SelectPackage(String fullPackage)
         {
             String path;
             for (int i = 0; i < srcPaths.Length; i++)
@@ -136,16 +194,15 @@ namespace Interfaciator.Dialogs
                 path = srcPaths[i];
                 if (fullPackage.Contains(path))
                 {
-                    showPackage(fullPackage, path);
+                    ShowPackage(fullPackage, path);
                     break;
                 }
             }
         }
 
-        protected void showPackage(String packagePath, String srcPath)
+        protected void ShowPackage(String packagePath, String srcPath)
         {
             int start = packagePath.IndexOf(srcPath) + srcPath.Length + 1;
-            //MessageBox.Show("found startIndex: " + start + " (computed: " + packagePath.IndexOf(srcPath) + ") for " + srcPath + " in " + packagePath);
             srcPath = (start != -1 && !packagePath.Equals(srcPath)) ? packagePath.Substring(start) : "";
             txtPackage.Text = srcPath.Replace(Path.DirectorySeparatorChar, '.');
         }
@@ -155,11 +212,6 @@ namespace Interfaciator.Dialogs
             this.btnOk.Focus();
         }
 
-        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
         private void btnCancel_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
@@ -167,18 +219,23 @@ namespace Interfaciator.Dialogs
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            CheckedListBox.CheckedItemCollection c = methodList.CheckedItems;
-            ArrayList picked = new ArrayList();
-            foreach(MemberModel m in members)
+            ListBox.SelectedObjectCollection c = methodList.SelectedItems;
+
+            List<MemberModel> picked = new List<MemberModel>();
+            foreach (GListBox.GListBoxItem item in c)
             {
-                if (c.Contains(m.ToDeclarationString()))
+                foreach (MemberModel m in members)
                 {
-                    picked.Add(m);
+                    if (m.ToDeclarationString().Equals(item.Text))
+                    {
+                        picked.Add(m);
+                        break;
+                    }
                 }
             }
             selectedPackage = txtPackage.Text;
             selectedName = txtName.Text;
-            members = (MemberModel[])picked.ToArray(new MemberModel().GetType());
+            members = picked.ToArray();
             this.DialogResult = DialogResult.OK;
         }
 
@@ -190,24 +247,18 @@ namespace Interfaciator.Dialogs
             if (pp.ShowDialog() == DialogResult.OK)
             {
                 selectedPath = pp.ChosenPath;
-                selectPackage(selectedPath);
+                SelectPackage(selectedPath);
             }
         }
 
         private void btnSelect_Click(object Sender, EventArgs e)
         {
-            for(int i = 0; i < this.methodList.Items.Count; i++)
-            {
-                this.methodList.SetItemChecked(i, true);
-            }
+            this.methodList.SelectAll();
         }
 
         private void btnDeselect_Click(object Sender, EventArgs e)
         {
-            for (int i = 0; i < this.methodList.Items.Count; i++)
-            {
-                this.methodList.SetItemChecked(i, false);
-            }
+            this.methodList.DeselectAll();
         }
     }
 }

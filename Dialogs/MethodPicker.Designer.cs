@@ -1,4 +1,5 @@
-﻿namespace Interfaciator.Dialogs
+﻿using Interfaciator.Controls;
+namespace Interfaciator.Dialogs
 {
     partial class MethodPicker
     {
@@ -29,7 +30,7 @@
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.methodList = new System.Windows.Forms.CheckedListBox();
+            this.methodList = new Interfaciator.Controls.GListBox();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnDeselect = new System.Windows.Forms.Button();
@@ -63,12 +64,15 @@
             this.methodList.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.methodList.CheckOnClick = true;
+            this.methodList.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.methodList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.methodList.FormattingEnabled = true;
+            this.methodList.ImageList = null;
+            this.methodList.ItemHeight = 15;
             this.methodList.Location = new System.Drawing.Point(6, 15);
             this.methodList.Name = "methodList";
+            this.methodList.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
             this.methodList.Size = new System.Drawing.Size(372, 154);
-            this.methodList.Sorted = true;
             this.methodList.TabIndex = 0;
             // 
             // btnOk
@@ -196,7 +200,8 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Button btnCancel;
-        public System.Windows.Forms.CheckedListBox methodList;
+        //public System.Windows.Forms.CheckedListBox methodList2;
+        public GListBox methodList;
         private System.Windows.Forms.Button btnDeselect;
         private System.Windows.Forms.Button btnSelect;
         private System.Windows.Forms.GroupBox savePath;
