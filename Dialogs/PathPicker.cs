@@ -30,7 +30,7 @@ namespace Interfaciator.Dialogs
             get { return chosenPath; }
             set {
                 chosenPath = value;
-                checkForPath();
+                CheckForPath();
             }
         }
 
@@ -44,13 +44,13 @@ namespace Interfaciator.Dialogs
                 for (int i = 0; i < paths.Length; i++)
                 {
                     path = paths[i];
-                    this.treePaths.Nodes.Add(createNode(path));
+                    this.treePaths.Nodes.Add(CreateNode(path));
                 }
-                checkForPath();
+                CheckForPath();
             }
         }
 
-        protected void checkForPath()
+        protected void CheckForPath()
         {
             if (chosenPath == null || paths == null || paths.Length < 1 || treePaths == null)
                 return;
@@ -68,14 +68,14 @@ namespace Interfaciator.Dialogs
                     else
                     {
                         path = chosenPath.Substring(path.Length);
-                        if (openNode(new Queue<String>(path.Split(Path.DirectorySeparatorChar)), treePaths.Nodes[i]))
+                        if (OpenNode(new Queue<String>(path.Split(Path.DirectorySeparatorChar)), treePaths.Nodes[i]))
                             return;
                     }
                 }
             }
         }
 
-        protected Boolean openNode(Queue<String> src, TreeNode parent)
+        protected Boolean OpenNode(Queue<String> src, TreeNode parent)
         {
             String nName = "";
             while (nName.Length == 0 && src.Count > 0)
@@ -97,28 +97,29 @@ namespace Interfaciator.Dialogs
                         return true;
                     }
                     else
-                        openNode(src, node);
+                        OpenNode(src, node);
                 }
             }
             return false;
         }
 
-        protected TreeNode createNode(String src)
+        protected TreeNode CreateNode(String src)
         {
-            return createNode(src, false);
+            return CreateNode(src, false);
         }
 
-        protected TreeNode createNode(String src, Boolean root)
+        protected TreeNode CreateNode(String src, Boolean root)
         {
             DirectoryInfo di = new DirectoryInfo(src);
             String display = (this.fullPath && !root)? di.FullName : di.Name;
             ///TODO: Get filtered names from ProjectManager
             ///TreeNode tn = new FolderNode(display,fullPath,filtered);
             TreeNode tn = new TreeNode(display);
+            tn.Name = (root)?di.Name : di.FullName;
             String[] children = Directory.GetDirectories(src);
             for (int i = 0; i < children.Length; i++)
             {
-                tn.Nodes.Add(createNode(children[i], true));
+                tn.Nodes.Add(CreateNode(children[i], true));
             }
             return tn;
         }
@@ -126,9 +127,21 @@ namespace Interfaciator.Dialogs
         protected void btnOk_Click(object sender, EventArgs e)
         {
             TreeNode node = treePaths.SelectedNode;
-            chosenPath = node.FullPath;
+            ///chosenPath = node.FullPath;
+            chosenPath = GetFullPath(node);
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        private string GetFullPath(TreeNode node)
+        {
+            String path = "";
+            if (node.Parent != null)
+            {
+                path += GetFullPath(node.Parent) + Path.DirectorySeparatorChar;
+            }
+            path += node.Name;
+            return path;
         }
     }
 }

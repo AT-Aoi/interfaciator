@@ -90,7 +90,7 @@ namespace Interfaciator.Dialogs
 
                 txtName.Text = namePrefix + selectedName;
                 if (srcPaths != null)
-                    selectPackage(selectedPath);
+                    SelectPackage(selectedPath);
             }
         }
 
@@ -126,7 +126,7 @@ namespace Interfaciator.Dialogs
                     srcPaths[i] = path;
                 }
                 if (selectedName != null)
-                    selectPackage(selectedPath);
+                    SelectPackage(selectedPath);
             }
         }
 
@@ -186,28 +186,7 @@ namespace Interfaciator.Dialogs
             this.methodList.ImageList = icons;
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            if (DialogResult != DialogResult.Cancel)
-            {
-                String path = this.selectedPath;
-                String file = Path.ChangeExtension(this.SelectedFile, ".as");
-                String filePath = Path.Combine(path, file);
-
-                if (File.Exists(filePath)) ///File already exists...
-                {
-                    string title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
-                    string message = TextHelper.GetString("ProjectManager.Info.FolderAlreadyContainsFile");
-                    DialogResult result = MessageBox.Show(PluginBase.MainForm, string.Format(message, file, "\n"), title, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                    if (result == DialogResult.No)
-                    {
-                        e.Cancel = true;
-                    }
-                }
-            }
-        }
-
-        protected void selectPackage(String fullPackage)
+        protected void SelectPackage(String fullPackage)
         {
             String path;
             for (int i = 0; i < srcPaths.Length; i++)
@@ -215,13 +194,13 @@ namespace Interfaciator.Dialogs
                 path = srcPaths[i];
                 if (fullPackage.Contains(path))
                 {
-                    showPackage(fullPackage, path);
+                    ShowPackage(fullPackage, path);
                     break;
                 }
             }
         }
 
-        protected void showPackage(String packagePath, String srcPath)
+        protected void ShowPackage(String packagePath, String srcPath)
         {
             int start = packagePath.IndexOf(srcPath) + srcPath.Length + 1;
             srcPath = (start != -1 && !packagePath.Equals(srcPath)) ? packagePath.Substring(start) : "";
@@ -268,28 +247,18 @@ namespace Interfaciator.Dialogs
             if (pp.ShowDialog() == DialogResult.OK)
             {
                 selectedPath = pp.ChosenPath;
-                selectPackage(selectedPath);
+                SelectPackage(selectedPath);
             }
         }
 
         private void btnSelect_Click(object Sender, EventArgs e)
         {
             this.methodList.SelectAll();
-            /*for(int i = 0; i < this.methodList.Items.Count; i++)
-            {
-                ///this.methodList.SetItemChecked(i, true);
-                this.methodList.SetSelected(i, true);
-            }*/
         }
 
         private void btnDeselect_Click(object Sender, EventArgs e)
         {
             this.methodList.DeselectAll();
-            /*for (int i = 0; i < this.methodList.Items.Count; i++)
-            {
-                ///this.methodList.SetItemChecked(i, false);
-                this.methodList.SetSelected(i, false);
-            }*/
         }
     }
 }

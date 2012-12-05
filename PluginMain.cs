@@ -37,12 +37,48 @@ namespace Interfaciator
         private String ifPackage;
         /// private String ifSuper;
         private String ifLang;
+        private String oriPackage;
         private MemberModel[] ifGenMethods;
+        private MemberList availableImports;
 
         private String fileCreated;
 
         private ToolStripItem tsi;
         private EventHandler tsi_ClickHandler;
+
+        private static List<String> as3NativeClasses = new List<string>()
+        {
+            "ArgumentError",
+            "arguments",
+            "Array",
+            "Boolean",
+            "Class",
+            "Date",
+            "DefinitionError",
+            "Error",
+            "EvalError",
+            "Function",
+            "int",
+            "JSON",
+            "Math",
+            "Namespace",
+            "Number",
+            "Object",
+            "QName",
+            "RangeError",
+            "ReferenceError",
+            "RegExp",
+            "SecurityError",
+            "String",
+            "SyntaxError",
+            "TypeError",
+            "uint",
+            "URIError",
+            "Vector",
+            "VerifyError",
+            "XML",
+            "XMLList"
+        };
 
         public static IMainForm MainForm { get { return PluginBase.MainForm; } }
         #endregion
@@ -153,8 +189,13 @@ namespace Interfaciator
             {
                 FileModel fm = ASContext.Context.GetFileModel(clickedPath);
                 fm.Check();
-
+                availableImports = fm.Imports;                
+                
                 ClassModel cm = fm.GetPublicClass();
+
+                String qn = cm.QualifiedName;
+                oriPackage = qn.Substring(0, qn.LastIndexOf("."));
+
                 Visibility v;
                 FlagType ft;
 
@@ -169,14 +210,13 @@ namespace Interfaciator
                         continue;
                     if ((v & Visibility.Public) > 0) ///only add if is public and...
                     {
-                        if(((ft & FlagType.Function)|(ft & FlagType.Getter)|(ft & FlagType.Setter)) > 0)
+                        if(((ft & FlagType.Function)|(ft & FlagType.Getter)|(ft & FlagType.Setter)) > 0) ///...is function, getter or setter
                         {
                             functions.Add(mm);
                         }
                     }
                 }
 
-                ///MethodPicker dialog = new MethodPicker(this.settingObject.AutoSelectMethods, this.settingObject.ShowFullPath, this.settingObject.FilteredDirectoryNames, this.settingObject.NamePrefix);
                 MethodPicker dialog = new MethodPicker();
                 dialog.AutoSelect = settingObject.AutoSelectMethods;
                 dialog.FullPath = settingObject.DisplayFullPath;
@@ -186,6 +226,8 @@ namespace Interfaciator
                 dialog.SourcePaths = getSourcePaths();
                 dialog.SelectedFile = clickedPath;
                 dialog.MethodList = functions.ToArray();
+
+                dialog.FormClosing += new FormClosingEventHandler(methodPicker_FormClosing);
 
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
@@ -198,6 +240,31 @@ namespace Interfaciator
                     ifLang = PluginBase.CurrentProject.Language;
 
                     generateFile(path, file);
+                }
+
+                dialog.FormClosing -= new FormClosingEventHandler(methodPicker_FormClosing);
+            }
+        }
+
+        void methodPicker_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            MethodPicker mp = (MethodPicker)sender;
+            if (mp.DialogResult != DialogResult.Cancel)
+            {
+                String path = mp.SelectedPath;
+                String file = Path.ChangeExtension(mp.SelectedFile, ".as");
+                String filePath = Path.Combine(path, file);
+
+                if (File.Exists(filePath)) ///File already exists...
+                {
+                    string title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
+                    string message = TextHelper.GetString("ProjectManager.Info.FolderAlreadyContainsFile");
+
+                    DialogResult result = MessageBox.Show(PluginBase.MainForm, string.Format(message, file, "\n"), title, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (result == DialogResult.No)
+                    {
+                        e.Cancel = true;
+                    }
                 }
             }
         }
@@ -230,7 +297,7 @@ namespace Interfaciator
                 if (!File.Exists(template))
                 {
                     ///Show Alert-Message that template-files are missing!
-                    MessageBox.Show("Drecks-Template... :(");
+                    MessageBox.Show("Unfortunately it seems like you're lacking the template-files needed for processing.");
                     return;
                 }                
             }
@@ -274,10 +341,10 @@ namespace Interfaciator
             String lineBreak = LineEndDetector.GetNewLineMarker(eolMode);
 
             List<String> imports = new List<String>();
-            ///string extends = "";
             string inheritedMethods = "";
 
             /// generate functions
+            /// TODO: change package of types that the interface gets placed aside
             foreach (MemberModel mm in ifGenMethods)
             {
                 if ((mm.Flags & FlagType.Static) > 0)
@@ -294,25 +361,62 @@ namespace Interfaciator
                 {
                     inheritedMethods += mm.ToDeclarationString();
                 }
-
                 inheritedMethods += lineBreak + "\t\t";
+
+                List<MemberModel> parameters = mm.Parameters;
+                if (mm.Parameters == null)
+                {
+                    parameters = new List<MemberModel>();
+                }
+                parameters.Add(mm);
+
+                Boolean found;
+                String type;
+                foreach (MemberModel parameter in parameters)
+                {
+                    type = parameter.Type;
+
+                    if (type.ToLower().StartsWith("vector."))
+                        continue;
+
+                    found = false;
+                    int dotPosition = parameter.Type.LastIndexOf(".");
+                    if (dotPosition > -1)
+                    {
+                        imports.Add(type);
+                    }
+                    else
+                    {
+                        foreach (MemberModel import in availableImports)
+                        {
+                            if (import.Name.Equals(type))
+                            {
+                                imports.Add(import.Type);
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found)
+                        {
+                            if (type.ToLower().Equals("void"))
+                                continue;
+                            if (as3NativeClasses.Contains(type))
+                                continue;
+                            if (oriPackage.Equals(ifPackage))
+                                continue;
+
+                            //assume type was aside of class...
+                            imports.Add(oriPackage + "." + type);
+                        }
+                    }
+                }
             }
 
-
-            // resolve extension and import
-            /*if (ifSuper != null && ifSuper != "")
-            {
-                string[] _extends = ifSuper.Split('.');
-                if (_extends.Length > 1)
-                    imports.Add(ifSuper);
-
-                ///extends = " extends " + _extends[_extends.Length - 1];
-            }*/
-
-            string importsSrc = "";
-            string prevImport = null;
+            String importsSrc = "";
+            String prevImport = null;
             imports.Sort();
-            foreach (string import in imports)
+            foreach (String import in imports)
             {
                 if (prevImport != import)
                 {
@@ -328,7 +432,6 @@ namespace Interfaciator
             }
 
             args = args.Replace("$(Import)", importsSrc);
-            ///args = args.Replace("$(Extends)", extends);
             args = args.Replace("$(InheritedMethods)", inheritedMethods);
             return args;
         }
