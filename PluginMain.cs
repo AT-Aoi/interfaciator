@@ -297,7 +297,7 @@ namespace Interfaciator
                 if (!File.Exists(template))
                 {
                     ///Show Alert-Message that template-files are missing!
-                    MessageBox.Show("Unfortunately it seems like you're lacking the template-files needed for processing.");
+                    MessageBox.Show("Unfortunately it seems like you're lacking the template-files needed for processing. Go see https://bitbucket.org/Gr33z00/interfaciator/downloads to download the templates.");
                     return;
                 }                
             }
