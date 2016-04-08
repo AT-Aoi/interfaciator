@@ -258,7 +258,7 @@ namespace Interfaciator
                 if (File.Exists(filePath)) ///File already exists...
                 {
                     string title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
-                    string message = TextHelper.GetString("ProjectManager.Info.FolderAlreadyContainsFile");
+                    string message = TextHelper.GetString("ProjectManager.Info.FileAlreadyExistsInProject");
 
                     DialogResult result = MessageBox.Show(PluginBase.MainForm, string.Format(message, file, "\n"), title, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (result == DialogResult.No)
@@ -347,6 +347,9 @@ namespace Interfaciator
             /// TODO: change package of types that the interface gets placed aside
             foreach (MemberModel mm in ifGenMethods)
             {
+                if (inheritedMethods.Length > 0)
+                    inheritedMethods += lineBreak + "\t\t";
+
                 if ((mm.Flags & FlagType.Static) > 0)
                     inheritedMethods += "static ";
 
@@ -355,13 +358,12 @@ namespace Interfaciator
                 if ((mm.Flags & FlagType.Getter) > 0 || (mm.Flags & FlagType.Setter) > 0)
                 {
                     inheritedMethods += ((mm.Flags & FlagType.Getter) > 0) ? "get " : "set ";
-                    inheritedMethods += mm.Name + "(" + mm.ParametersString(true) + "):" + mm.Type;
+                    inheritedMethods += mm.Name + "(" + mm.ParametersString(true) + "):" + mm.Type + ';';
                 }
                 else
                 {
-                    inheritedMethods += mm.ToDeclarationString();
+                    inheritedMethods += mm.ToDeclarationString(false, false) + ';';
                 }
-                inheritedMethods += lineBreak + "\t\t";
 
                 List<MemberModel> parameters = mm.Parameters;
                 if (mm.Parameters == null)
@@ -425,10 +427,6 @@ namespace Interfaciator
                     if (import.Substring(0, import.LastIndexOf('.')) == ifPackage) continue;
                     importsSrc += (ifLang == "as3" ? "\t" : "") + "import " + import + ";" + lineBreak;
                 }
-            }
-            if (importsSrc.Length > 0)
-            {
-                importsSrc += (ifLang == "as3" ? "\t" : "") + lineBreak;
             }
 
             args = args.Replace("$(Import)", importsSrc);
