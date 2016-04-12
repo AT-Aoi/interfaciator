@@ -194,7 +194,8 @@ namespace Interfaciator
                 ClassModel cm = fm.GetPublicClass();
 
                 String qn = cm.QualifiedName;
-                oriPackage = qn.Substring(0, qn.LastIndexOf("."));
+                int packageLength = qn.LastIndexOf(".");
+                oriPackage = (packageLength >= 0) ? qn.Substring(0, packageLength) : qn;
 
                 Visibility v;
                 FlagType ft;
